@@ -94,12 +94,16 @@ public class Startup
 
         ConfigureEventBus(app);
     }
-
+    /// <summary>
+    /// 事件订阅
+    /// </summary>
+    /// <param name="app"></param>
 
     private void ConfigureEventBus(IApplicationBuilder app)
     {
+        //事件订阅
         var eventBus = app.ApplicationServices.GetRequiredService<BuildingBlocks.EventBus.Abstractions.IEventBus>();
-
+        
         eventBus.Subscribe<UserCheckoutAcceptedIntegrationEvent, IIntegrationEventHandler<UserCheckoutAcceptedIntegrationEvent>>();
         eventBus.Subscribe<GracePeriodConfirmedIntegrationEvent, IIntegrationEventHandler<GracePeriodConfirmedIntegrationEvent>>();
         eventBus.Subscribe<OrderStockConfirmedIntegrationEvent, IIntegrationEventHandler<OrderStockConfirmedIntegrationEvent>>();
@@ -265,6 +269,7 @@ static class CustomExtensionsMethods
         }
         else
         {
+            //注册IRabbitMQPersistentConnection服务用于设置RabbitMQ连接
             services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
@@ -342,6 +347,7 @@ static class CustomExtensionsMethods
         }
         else
         {
+            //注册单例模式的EventBusRabbitMQ
             services.AddSingleton<IEventBus, EventBusRabbitMQ>(sp =>
             {
                 var subscriptionClientName = configuration["SubscriptionClientName"];
@@ -359,7 +365,7 @@ static class CustomExtensionsMethods
                 return new EventBusRabbitMQ(rabbitMQPersistentConnection, logger, iLifetimeScope, eventBusSubcriptionsManager, subscriptionClientName, retryCount);
             });
         }
-
+        //注册单例模式的IEventBusSubscriptionsManager用于订阅管理
         services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
 
         return services;

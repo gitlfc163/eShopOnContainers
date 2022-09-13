@@ -55,6 +55,7 @@ namespace Ordering.BackgroundTasks.Services
 
                 _logger.LogInformation("----- Publishing integration event: {IntegrationEventId} from {AppName} - ({@IntegrationEvent})", confirmGracePeriodEvent.Id, Program.AppName, confirmGracePeriodEvent);
 
+                //发布事件
                 _eventBus.Publish(confirmGracePeriodEvent);
             }
         }

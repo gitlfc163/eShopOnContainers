@@ -2,9 +2,15 @@
 
 namespace Microsoft.eShopOnContainers.Services.Identity.API.Configuration
 {
+    /// <summary>
+    /// 全部配置
+    /// </summary>
     public class Config
     {
-        // ApiResources define the apis in your system
+        /// <summary>
+        /// ApiResources 定义系统中的 api
+        /// </summary>
+        /// <returns></returns>
         public static IEnumerable<ApiResource> GetApis()
         {            
             return new List<ApiResource>
@@ -29,7 +35,7 @@ namespace Microsoft.eShopOnContainers.Services.Identity.API.Configuration
             };
         }
 
-        // client want to access resources (aka scopes)
+        // 获取客户想要访问资源（又名范围）
         public static IEnumerable<Client> GetClients(Dictionary<string, string> clientsUrl)
         {
             return new List<Client>

@@ -29,6 +29,7 @@ public class CatalogIntegrationEventService : ICatalogIntegrationEventService, I
             _logger.LogInformation("----- Publishing integration event: {IntegrationEventId_published} from {AppName} - ({@IntegrationEvent})", evt.Id, Program.AppName, evt);
 
             await _eventLogService.MarkEventAsInProgressAsync(evt.Id);
+            //发布事件
             _eventBus.Publish(evt);
             await _eventLogService.MarkEventAsPublishedAsync(evt.Id);
         }
@@ -43,11 +44,11 @@ public class CatalogIntegrationEventService : ICatalogIntegrationEventService, I
     {
         _logger.LogInformation("----- CatalogIntegrationEventService - Saving changes and integrationEvent: {IntegrationEventId}", evt.Id);
 
-        //Use of an EF Core resiliency strategy when using multiple DbContexts within an explicit BeginTransaction():
+        //在显式 BeginTransaction() 中使用多个 DbContext 时使用 EF Core 弹性策略:
         //See: https://docs.microsoft.com/en-us/ef/core/miscellaneous/connection-resiliency            
         await ResilientTransaction.New(_catalogContext).ExecuteAsync(async () =>
         {
-            // Achieving atomicity between original catalog database operation and the IntegrationEventLog thanks to a local transaction
+            // 由于本地事务，在原始目录数据库操作和 IntegrationEventLog 之间实现原子性
             await _catalogContext.SaveChangesAsync();
             await _eventLogService.SaveEventAsync(evt, _catalogContext.Database.CurrentTransaction);
         });

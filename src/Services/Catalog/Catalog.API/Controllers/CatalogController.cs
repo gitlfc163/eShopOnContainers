@@ -18,6 +18,13 @@ public class CatalogController : ControllerBase
     }
 
     // GET api/v1/[controller]/items[?pageSize=3&pageIndex=10]
+    /// <summary>
+    /// 查询商品并分页
+    /// </summary>
+    /// <param name="pageSize"></param>
+    /// <param name="pageIndex"></param>
+    /// <param name="ids"></param>
+    /// <returns></returns>
     [HttpGet]
     [Route("items")]
     [ProducesResponseType(typeof(PaginatedItemsViewModel<CatalogItem>), (int)HttpStatusCode.OK)]
@@ -62,6 +69,11 @@ public class CatalogController : ControllerBase
         return Ok(model);
     }
 
+    /// <summary>
+    /// 查询多个商品详情
+    /// </summary>
+    /// <param name="ids"></param>
+    /// <returns></returns>
     private async Task<List<CatalogItem>> GetItemsByIdsAsync(string ids)
     {
         var numIds = ids.Split(',').Select(id => (Ok: int.TryParse(id, out int x), Value: x));
@@ -80,7 +92,11 @@ public class CatalogController : ControllerBase
 
         return items;
     }
-
+    /// <summary>
+    /// 查询商品详情
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet]
     [Route("items/{id:int}")]
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -109,6 +125,13 @@ public class CatalogController : ControllerBase
     }
 
     // GET api/v1/[controller]/items/withname/samplename[?pageSize=3&pageIndex=10]
+    /// <summary>
+    /// 根据名字模糊查询
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="pageSize"></param>
+    /// <param name="pageIndex"></param>
+    /// <returns></returns>
     [HttpGet]
     [Route("items/withname/{name:minlength(1)}")]
     [ProducesResponseType(typeof(PaginatedItemsViewModel<CatalogItem>), (int)HttpStatusCode.OK)]
@@ -130,6 +153,14 @@ public class CatalogController : ControllerBase
     }
 
     // GET api/v1/[controller]/items/type/1/brand[?pageSize=3&pageIndex=10]
+    /// <summary>
+    /// 根据类型+商家查询
+    /// </summary>
+    /// <param name="catalogTypeId">类型id</param>
+    /// <param name="catalogBrandId">商家id</param>
+    /// <param name="pageSize"></param>
+    /// <param name="pageIndex"></param>
+    /// <returns></returns>
     [HttpGet]
     [Route("items/type/{catalogTypeId}/brand/{catalogBrandId:int?}")]
     [ProducesResponseType(typeof(PaginatedItemsViewModel<CatalogItem>), (int)HttpStatusCode.OK)]
@@ -158,6 +189,13 @@ public class CatalogController : ControllerBase
     }
 
     // GET api/v1/[controller]/items/type/all/brand[?pageSize=3&pageIndex=10]
+    /// <summary>
+    /// 根据商家查询
+    /// </summary>
+    /// <param name="catalogBrandId"></param>
+    /// <param name="pageSize"></param>
+    /// <param name="pageIndex"></param>
+    /// <returns></returns>
     [HttpGet]
     [Route("items/type/all/brand/{catalogBrandId:int?}")]
     [ProducesResponseType(typeof(PaginatedItemsViewModel<CatalogItem>), (int)HttpStatusCode.OK)]
@@ -184,6 +222,10 @@ public class CatalogController : ControllerBase
     }
 
     // GET api/v1/[controller]/CatalogTypes
+    /// <summary>
+    /// 所有商品类别
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
     [Route("catalogtypes")]
     [ProducesResponseType(typeof(List<CatalogType>), (int)HttpStatusCode.OK)]
@@ -193,6 +235,10 @@ public class CatalogController : ControllerBase
     }
 
     // GET api/v1/[controller]/CatalogBrands
+    /// <summary>
+    ///  所有商家
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
     [Route("catalogbrands")]
     [ProducesResponseType(typeof(List<CatalogBrand>), (int)HttpStatusCode.OK)]
@@ -202,6 +248,12 @@ public class CatalogController : ControllerBase
     }
 
     //PUT api/v1/[controller]/items
+    /// <summary>
+    /// 更新商品
+    /// 发布事件
+    /// </summary>
+    /// <param name="productToUpdate"></param>
+    /// <returns></returns>
     [Route("items")]
     [HttpPut]
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -216,24 +268,25 @@ public class CatalogController : ControllerBase
         }
 
         var oldPrice = catalogItem.Price;
+        //价格是否发生变化
         var raiseProductPriceChangedEvent = oldPrice != productToUpdate.Price;
 
         // Update current product
         catalogItem = productToUpdate;
         _catalogContext.CatalogItems.Update(catalogItem);
 
-        if (raiseProductPriceChangedEvent) // Save product's data and publish integration event through the Event Bus if price has changed
+        if (raiseProductPriceChangedEvent) // 如果价格发生变化，保存产品数据并通过事件总线发布集成事件
         {
-            //Create Integration Event to be published through the Event Bus
+            //声明事件源 创建要通过事件总线发布的集成事件
             var priceChangedEvent = new ProductPriceChangedIntegrationEvent(catalogItem.Id, productToUpdate.Price, oldPrice);
 
-            // Achieving atomicity between original Catalog database operation and the IntegrationEventLog thanks to a local transaction
+            // 由于本地事务，在原始目录数据库操作和 IntegrationEventLog 之间实现原子性
             await _catalogIntegrationEventService.SaveEventAndCatalogContextChangesAsync(priceChangedEvent);
 
-            // Publish through the Event Bus and mark the saved event as published
+            // 通过事件总线发布并将保存的事件标记为已发布
             await _catalogIntegrationEventService.PublishThroughEventBusAsync(priceChangedEvent);
         }
-        else // Just save the updated product because the Product's Price hasn't changed.
+        else // 只需保存更新的产品，因为产品的价格没有改变.
         {
             await _catalogContext.SaveChangesAsync();
         }
@@ -242,6 +295,11 @@ public class CatalogController : ControllerBase
     }
 
     //POST api/v1/[controller]/items
+    /// <summary>
+    /// 添加商品
+    /// </summary>
+    /// <param name="product"></param>
+    /// <returns></returns>
     [Route("items")]
     [HttpPost]
     [ProducesResponseType((int)HttpStatusCode.Created)]
@@ -265,6 +323,11 @@ public class CatalogController : ControllerBase
     }
 
     //DELETE api/v1/[controller]/id
+    /// <summary>
+    /// 删除商品
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [Route("{id}")]
     [HttpDelete]
     [ProducesResponseType((int)HttpStatusCode.NoContent)]
@@ -284,7 +347,11 @@ public class CatalogController : ControllerBase
 
         return NoContent();
     }
-
+    /// <summary>
+    /// 修改图片地址
+    /// </summary>
+    /// <param name="items"></param>
+    /// <returns></returns>
     private List<CatalogItem> ChangeUriPlaceholder(List<CatalogItem> items)
     {
         var baseUri = _settings.PicBaseUrl;

@@ -1,12 +1,19 @@
 ﻿namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBus;
 
+/// <summary>
+/// 事件订阅管理的内存实现方式
+/// 使用内存进行存储事件源和事件处理的映射字典
+/// </summary>
 public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptionsManager
 {
 
-
+    //定义的事件名称和事件订阅的字典映射（1:N）
     private readonly Dictionary<string, List<SubscriptionInfo>> _handlers;
+
+    //保存所有的事件处理类型
     private readonly List<Type> _eventTypes;
 
+    //定义事件移除后事件
     public event EventHandler<string> OnEventRemoved;
 
     public InMemoryEventBusSubscriptionsManager()
@@ -18,12 +25,22 @@ public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptio
     public bool IsEmpty => _handlers is { Count: 0 };
     public void Clear() => _handlers.Clear();
 
+    /// <summary>
+    /// 添加动态类型事件订阅（需要手动指定事件名称）
+    /// </summary>
+    /// <typeparam name="TH"></typeparam>
+    /// <param name="eventName"></param>
     public void AddDynamicSubscription<TH>(string eventName)
         where TH : IDynamicIntegrationEventHandler
     {
         DoAddSubscription(typeof(TH), eventName, isDynamic: true);
     }
 
+    /// <summary>
+    /// 添加强类型事件订阅（事件名称为事件源类型）
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TH"></typeparam>
     public void AddSubscription<T, TH>()
         where T : IntegrationEvent
         where TH : IIntegrationEventHandler<T>
@@ -38,6 +55,13 @@ public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptio
         }
     }
 
+    /// <summary>
+    /// 添加强类型事件订阅
+    /// </summary>
+    /// <param name="handlerType"></param>
+    /// <param name="eventName"></param>
+    /// <param name="isDynamic"></param>
+    /// <exception cref="ArgumentException"></exception>
     private void DoAddSubscription(Type handlerType, string eventName, bool isDynamic)
     {
         if (!HasSubscriptionsForEvent(eventName))
@@ -61,7 +85,11 @@ public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptio
         }
     }
 
-
+    /// <summary>
+    /// 移除动态类型事件订阅
+    /// </summary>
+    /// <typeparam name="TH"></typeparam>
+    /// <param name="eventName"></param>
     public void RemoveDynamicSubscription<TH>(string eventName)
         where TH : IDynamicIntegrationEventHandler
     {
@@ -69,7 +97,11 @@ public partial class InMemoryEventBusSubscriptionsManager : IEventBusSubscriptio
         DoRemoveHandler(eventName, handlerToRemove);
     }
 
-
+    /// <summary>
+    /// 移除强类型事件订阅
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TH"></typeparam>
     public void RemoveSubscription<T, TH>()
         where TH : IIntegrationEventHandler<T>
         where T : IntegrationEvent

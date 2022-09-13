@@ -1,5 +1,8 @@
 ﻿namespace Identity.API.Factories
 {
+    /// <summary>
+    /// 迁移操作数据库
+    /// </summary>
     public class PersistedGrantDbContextFactory : IDesignTimeDbContextFactory<PersistedGrantDbContext>
     {
         public PersistedGrantDbContext CreateDbContext(string[] args)

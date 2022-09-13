@@ -13,7 +13,11 @@ public class PicController : ControllerBase
         _env = env;
         _catalogContext = catalogContext;
     }
-
+    /// <summary>
+    ///  根据商品id，下载图片
+    /// </summary>
+    /// <param name="catalogItemId"></param>
+    /// <returns></returns>
     [HttpGet]
     [Route("api/v1/catalog/items/{catalogItemId:int}/pic")]
     [ProducesResponseType((int)HttpStatusCode.NotFound)]

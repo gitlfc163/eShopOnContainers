@@ -32,6 +32,7 @@ public class OrderingIntegrationEventService : IOrderingIntegrationEventService
             try
             {
                 await _eventLogService.MarkEventAsInProgressAsync(logEvt.EventId);
+                //发布事件
                 _eventBus.Publish(logEvt.IntegrationEvent);
                 await _eventLogService.MarkEventAsPublishedAsync(logEvt.EventId);
             }

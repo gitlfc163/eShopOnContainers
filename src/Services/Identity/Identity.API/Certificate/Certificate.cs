@@ -1,5 +1,8 @@
 ﻿namespace Microsoft.eShopOnContainers.Services.Identity.API.Certificates
 {
+    /// <summary>
+    /// 设置签名凭据
+    /// </summary>
     static class Certificate
     {
         public static X509Certificate2 Get()
@@ -8,9 +11,7 @@
             var names = assembly.GetManifestResourceNames();
 
             /***********************************************************************************************
-             *  Please note that here we are using a local certificate only for testing purposes. In a 
-             *  real environment the certificate should be created and stored in a secure way, which is out
-             *  of the scope of this project.
+             *  请注意，这里我们仅将本地证书用于测试目的。 在真实环境中，证书应该以安全的方式创建和存储，这超出了本项目的范围
              **********************************************************************************************/
             using var stream = assembly.GetManifestResourceStream("Identity.API.Certificate.idsrv3test.pfx");
             return new X509Certificate2(ReadStream(stream), "idsrv3test");

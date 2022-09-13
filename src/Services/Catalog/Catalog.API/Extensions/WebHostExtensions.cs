@@ -8,7 +8,14 @@ public static class WebHostExtensions
         var orchestratorType = cfg.GetValue<string>("OrchestratorType");
         return orchestratorType?.ToUpper() == "K8S";
     }
-
+    /// <summary>
+    /// webhost 宿主机
+    /// 迁移数据库及数据
+    /// </summary>
+    /// <typeparam name="TContext"></typeparam>
+    /// <param name="host"></param>
+    /// <param name="seeder"></param>
+    /// <returns></returns>
     public static IWebHost MigrateDbContext<TContext>(this IWebHost host, Action<TContext, IServiceProvider> seeder) where TContext : DbContext
     {
         var underK8s = host.IsInKubernetes();

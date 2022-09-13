@@ -67,6 +67,7 @@ public class BasketController : ControllerBase
         // order creation process
         try
         {
+            //发布事件
             _eventBus.Publish(eventMessage);
         }
         catch (Exception ex)

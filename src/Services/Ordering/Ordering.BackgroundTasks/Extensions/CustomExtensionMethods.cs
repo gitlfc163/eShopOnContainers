@@ -71,6 +71,7 @@ namespace Ordering.BackgroundTasks.Extensions
             }
             else
             {
+                //注册IRabbitMQPersistentConnection服务用于设置RabbitMQ连接
                 services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
                 {
                     var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
@@ -101,6 +102,7 @@ namespace Ordering.BackgroundTasks.Extensions
                     return new DefaultRabbitMQPersistentConnection(factory, logger, retryCount);
                 });
 
+                //注册单例模式的EventBusRabbitMQ
                 services.AddSingleton<IEventBus, EventBusRabbitMQ>(sp =>
                 {
                     var rabbitMQPersistentConnection = sp.GetRequiredService<IRabbitMQPersistentConnection>();
@@ -118,7 +120,7 @@ namespace Ordering.BackgroundTasks.Extensions
                     return new EventBusRabbitMQ(rabbitMQPersistentConnection, logger, iLifetimeScope, eventBusSubcriptionsManager, subscriptionClientName, retryCount);
                 });
             }
-
+            //注册单例模式的IEventBusSubscriptionsManager用于订阅管理
             services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
 
             return services;

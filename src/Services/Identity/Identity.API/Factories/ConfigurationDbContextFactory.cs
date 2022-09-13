@@ -1,5 +1,8 @@
 ﻿namespace Identity.API.Factories
 {
+    /// <summary>
+    /// 迁移用户数据库
+    /// </summary>
     public class ConfigurationDbContextFactory : IDesignTimeDbContextFactory<ConfigurationDbContext>
     {
         public ConfigurationDbContext CreateDbContext(string[] args)

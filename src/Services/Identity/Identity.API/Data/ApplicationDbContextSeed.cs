@@ -4,7 +4,15 @@
     public class ApplicationDbContextSeed
     {
         private readonly IPasswordHasher<ApplicationUser> _passwordHasher = new PasswordHasher<ApplicationUser>();
-
+        /// <summary>
+        /// 生成 应用用户 种子数据
+        /// </summary>
+        /// <param name="context">上下文</param>
+        /// <param name="env">环境</param>
+        /// <param name="logger">日志</param>
+        /// <param name="settings">appsettings配置</param>
+        /// <param name="retry">重试</param>
+        /// <returns></returns>
         public async Task SeedAsync(ApplicationDbContext context, IWebHostEnvironment env,
             ILogger<ApplicationDbContextSeed> logger, IOptions<AppSettings> settings, int? retry = 0)
         {
@@ -18,6 +26,7 @@
 
                 if (!context.Users.Any())
                 {
+                    // 如果文件没有数据，则使用默认数据
                     context.Users.AddRange(useCustomizationData
                         ? GetUsersFromFile(contentRootPath, logger)
                         : GetDefaultUser());
@@ -42,7 +51,12 @@
                 }
             }
         }
-
+        /// <summary>
+        /// 从文件中获取用户数据
+        /// </summary>
+        /// <param name="contentRootPath"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
         private IEnumerable<ApplicationUser> GetUsersFromFile(string contentRootPath, ILogger logger)
         {
             string csvFileUsers = Path.Combine(contentRootPath, "Setup", "Users.csv");
@@ -80,7 +94,12 @@
 
             return users;
         }
-
+        /// <summary>
+        /// 生成应用用户数据对象实例
+        /// </summary>
+        /// <param name="column"></param>
+        /// <param name="headers"></param>
+        /// <returns></returns>
         private ApplicationUser CreateApplicationUser(string[] column, string[] headers)
         {
             if (column.Count() != headers.Count())
@@ -122,7 +141,10 @@
 
             return user;
         }
-
+        /// <summary>
+        /// 生成默认数据
+        /// </summary>
+        /// <returns></returns>
         private IEnumerable<ApplicationUser> GetDefaultUser()
         {
             var user =
@@ -156,7 +178,12 @@
                 user
             };
         }
-
+        /// <summary>
+        /// 获取header数据
+        /// </summary>
+        /// <param name="requiredHeaders"></param>
+        /// <param name="csvfile"></param>
+        /// <returns></returns>
         static string[] GetHeaders(string[] requiredHeaders, string csvfile)
         {
             string[] csvheaders = File.ReadLines(csvfile).First().ToLowerInvariant().Split(',');
@@ -176,7 +203,13 @@
 
             return csvheaders;
         }
-
+        /// <summary>
+        /// 从zip压缩包中获取预加载图片
+        /// 比如logo
+        /// </summary>
+        /// <param name="contentRootPath"></param>
+        /// <param name="webroot"></param>
+        /// <param name="logger"></param>
         static void GetPreconfiguredImages(string contentRootPath, string webroot, ILogger logger)
         {
             try

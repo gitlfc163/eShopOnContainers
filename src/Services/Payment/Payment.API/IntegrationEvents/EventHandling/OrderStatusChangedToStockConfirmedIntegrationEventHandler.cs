@@ -44,6 +44,7 @@ public class OrderStatusChangedToStockConfirmedIntegrationEventHandler :
 
             _logger.LogInformation("----- Publishing integration event: {IntegrationEventId} from {AppName} - ({@IntegrationEvent})", orderPaymentIntegrationEvent.Id, Program.AppName, orderPaymentIntegrationEvent);
 
+            //发布事件
             _eventBus.Publish(orderPaymentIntegrationEvent);
 
             await Task.CompletedTask;

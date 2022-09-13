@@ -1,5 +1,8 @@
 ﻿namespace Microsoft.eShopOnContainers.Services.Identity.API.Services
 {
+    /// <summary>
+    /// 获取请求上下文的数据
+    /// </summary>
     public class ProfileService : IProfileService
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -8,7 +11,13 @@
         {
             _userManager = userManager;
         }
-
+        /// <summary>
+        /// 每当请求有关用户的声明时（例如，在创建令牌期间或通过 userinfo 端点），都会调用此方法
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         async public Task GetProfileDataAsync(ProfileDataRequestContext context)
         {
             var subject = context.Subject ?? throw new ArgumentNullException(nameof(context.Subject));
@@ -22,7 +31,12 @@
             var claims = GetClaimsFromUser(user);
             context.IssuedClaims = claims.ToList();
         }
-
+        /// <summary>
+        /// 每当身份服务器需要确定用户是有效的还是活动的（例如，如果用户的帐户自登录后已被停用）时，就会调用此方法。（例如，在令牌发行或验证期间）。
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         async public Task IsActiveAsync(IsActiveContext context)
         {
             var subject = context.Subject ?? throw new ArgumentNullException(nameof(context.Subject));

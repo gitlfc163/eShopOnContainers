@@ -11,7 +11,9 @@ public class Startup
 
     public IServiceProvider ConfigureServices(IServiceCollection services)
     {
+        // 自定义服务扩展
         services.AddAppInsight(Configuration)
+            //将 gRPC 服务添加到指定的Services
             .AddGrpc().Services
             .AddCustomMVC(Configuration)
             .AddCustomDbContext(Configuration)
@@ -21,6 +23,7 @@ public class Startup
             .AddSwagger(Configuration)
             .AddCustomHealthCheck(Configuration);
 
+        // 使用Autofac依赖注入容器
         var container = new ContainerBuilder();
         container.Populate(services);
 
@@ -80,19 +83,34 @@ public class Startup
             });
         });
 
+        // 配置事件总线
         ConfigureEventBus(app);
     }
-
+    /// <summary>
+    /// 事件订阅 配置事件总线
+    /// 等待验证 + 等待支付
+    /// </summary>
+    /// <param name="app"></param>
     protected virtual void ConfigureEventBus(IApplicationBuilder app)
     {
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
+        //事件订阅
         eventBus.Subscribe<OrderStatusChangedToAwaitingValidationIntegrationEvent, OrderStatusChangedToAwaitingValidationIntegrationEventHandler>();
         eventBus.Subscribe<OrderStatusChangedToPaidIntegrationEvent, OrderStatusChangedToPaidIntegrationEventHandler>();
     }
 }
 
+/// <summary>
+/// 自定义扩展方法
+/// </summary>
 public static class CustomExtensionMethods
 {
+    /// <summary>
+    /// app监控
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
     public static IServiceCollection AddAppInsight(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddApplicationInsightsTelemetry(configuration);
@@ -100,7 +118,13 @@ public static class CustomExtensionMethods
 
         return services;
     }
-
+    /// <summary>
+    /// 自定义MVC服务，
+    /// 跨域
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
     public static IServiceCollection AddCustomMVC(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers(options =>
@@ -121,7 +145,13 @@ public static class CustomExtensionMethods
 
         return services;
     }
-
+    /// <summary>
+    /// 自定义健康检查，
+    /// sqlserver + AzureBlob + AzureServiceBus + RabbitMQ
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
     public static IServiceCollection AddCustomHealthCheck(this IServiceCollection services, IConfiguration configuration)
     {
         var accountName = configuration.GetValue<string>("AzureStorageAccountName");
@@ -165,9 +195,16 @@ public static class CustomExtensionMethods
 
         return services;
     }
-
+    /// <summary>
+    /// 自定义Db上下文，
+    /// 商品目录 + 事件日志
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
     public static IServiceCollection AddCustomDbContext(this IServiceCollection services, IConfiguration configuration)
     {
+        // 商品目录
         services.AddEntityFrameworkSqlServer()
             .AddDbContext<CatalogContext>(options =>
         {
@@ -179,7 +216,7 @@ public static class CustomExtensionMethods
                                         sqlOptions.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
                                     });
         });
-
+        //事件日志
         services.AddDbContext<IntegrationEventLogContext>(options =>
         {
             options.UseSqlServer(configuration["ConnectionString"],
@@ -193,10 +230,17 @@ public static class CustomExtensionMethods
 
         return services;
     }
-
+    /// <summary>
+    /// 自定义选项配置
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
     public static IServiceCollection AddCustomOptions(this IServiceCollection services, IConfiguration configuration)
     {
+        // 参数选项配置
         services.Configure<CatalogSettings>(configuration);
+        // 统一模型验证配置
         services.Configure<ApiBehaviorOptions>(options =>
         {
             options.InvalidModelStateResponseFactory = context =>
@@ -217,7 +261,12 @@ public static class CustomExtensionMethods
 
         return services;
     }
-
+    /// <summary>
+    /// 定义Swagger文档
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
     public static IServiceCollection AddSwagger(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSwaggerGen(options =>
@@ -233,7 +282,13 @@ public static class CustomExtensionMethods
         return services;
 
     }
-
+    /// <summary>
+    /// 添加集成服务，
+    /// Azure + RabbitMQ
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
     public static IServiceCollection AddIntegrationServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddTransient<Func<DbConnection, IIntegrationEventLogService>>(
@@ -253,6 +308,7 @@ public static class CustomExtensionMethods
         }
         else
         {
+            //注册IRabbitMQPersistentConnection服务用于设置RabbitMQ连接
             services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
             {
                 var settings = sp.GetRequiredService<IOptions<CatalogSettings>>().Value;
@@ -286,7 +342,14 @@ public static class CustomExtensionMethods
 
         return services;
     }
-
+    /// <summary>
+    /// 定义事件总线，
+    /// 订单状态更改：
+    /// 等待验证集成事件 + 等待支付集成事件
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
     public static IServiceCollection AddEventBus(this IServiceCollection services, IConfiguration configuration)
     {
         if (configuration.GetValue<bool>("AzureServiceBusEnabled"))
@@ -306,6 +369,7 @@ public static class CustomExtensionMethods
         }
         else
         {
+            //注册单例模式的EventBusRabbitMQ
             services.AddSingleton<IEventBus, EventBusRabbitMQ>(sp =>
             {
                 var subscriptionClientName = configuration["SubscriptionClientName"];
@@ -323,7 +387,7 @@ public static class CustomExtensionMethods
                 return new EventBusRabbitMQ(rabbitMQPersistentConnection, logger, iLifetimeScope, eventBusSubcriptionsManager, subscriptionClientName, retryCount);
             });
         }
-
+        //注册单例模式的IEventBusSubscriptionsManager用于订阅管理
         services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
         services.AddTransient<OrderStatusChangedToAwaitingValidationIntegrationEventHandler>();
         services.AddTransient<OrderStatusChangedToPaidIntegrationEventHandler>();

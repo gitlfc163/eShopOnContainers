@@ -1,5 +1,8 @@
 ﻿namespace Microsoft.eShopOnContainers.Services.Identity.API.Services
 {
+    /// <summary>
+    /// 用户登录服务
+    /// </summary>
     public class EFLoginService : ILoginService<ApplicationUser>
     {
         private UserManager<ApplicationUser> _userManager;

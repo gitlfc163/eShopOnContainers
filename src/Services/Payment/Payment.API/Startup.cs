@@ -29,6 +29,7 @@ public class Startup
         }
         else
         {
+            //注册IRabbitMQPersistentConnection服务用于设置RabbitMQ连接
             services.AddSingleton<IRabbitMQPersistentConnection>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<DefaultRabbitMQPersistentConnection>>();
@@ -118,6 +119,7 @@ public class Startup
         }
         else
         {
+            //注册单例模式的EventBusRabbitMQ
             services.AddSingleton<IEventBus, EventBusRabbitMQ>(sp =>
             {
                 var subscriptionClientName = Configuration["SubscriptionClientName"];
@@ -137,11 +139,16 @@ public class Startup
         }
 
         services.AddTransient<OrderStatusChangedToStockConfirmedIntegrationEventHandler>();
+        //注册单例模式的IEventBusSubscriptionsManager用于订阅管理
         services.AddSingleton<IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
     }
-
+    /// <summary>
+    /// 事件订阅
+    /// </summary>
+    /// <param name="app"></param>
     private void ConfigureEventBus(IApplicationBuilder app)
     {
+        //事件订阅
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
         eventBus.Subscribe<OrderStatusChangedToStockConfirmedIntegrationEvent, OrderStatusChangedToStockConfirmedIntegrationEventHandler>();
     }

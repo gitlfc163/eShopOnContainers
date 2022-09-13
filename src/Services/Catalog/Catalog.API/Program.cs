@@ -1,5 +1,8 @@
-﻿var configuration = GetConfiguration();
+﻿
+// 配置
+var configuration = GetConfiguration();
 
+// 日志
 Log.Logger = CreateSerilogLogger(configuration);
 
 try
@@ -7,7 +10,9 @@ try
     Log.Information("Configuring web host ({ApplicationContext})...", Program.AppName);
     var host = CreateHostBuilder(configuration, args);
 
+    // 迁移数据
     Log.Information("Applying migrations ({ApplicationContext})...", Program.AppName);
+    // 商品目录服务
     host.MigrateDbContext<CatalogContext>((context, services) =>
     {
         var env = services.GetService<IWebHostEnvironment>();
@@ -16,6 +21,7 @@ try
 
         new CatalogContextSeed().SeedAsync(context, env, settings, logger).Wait();
     })
+    // 事件日志
     .MigrateDbContext<IntegrationEventLogContext>((_, __) => { });
 
     Log.Information("Starting web host ({ApplicationContext})...", Program.AppName);
@@ -33,6 +39,7 @@ finally
     Log.CloseAndFlush();
 }
 
+// 配置Host：Kestrel端口 + Web根目录 + 日志 
 IWebHost CreateHostBuilder(IConfiguration configuration, string[] args) =>
   WebHost.CreateDefaultBuilder(args)
       .ConfigureAppConfiguration(x => x.AddConfiguration(configuration))
@@ -56,6 +63,7 @@ IWebHost CreateHostBuilder(IConfiguration configuration, string[] args) =>
       .UseSerilog()
       .Build();
 
+// 配置Seril日志
 Serilog.ILogger CreateSerilogLogger(IConfiguration configuration)
 {
     var seqServerUrl = configuration["Serilog:SeqServerUrl"];
@@ -71,6 +79,7 @@ Serilog.ILogger CreateSerilogLogger(IConfiguration configuration)
         .CreateLogger();
 }
 
+// 配置端口
 (int httpPort, int grpcPort) GetDefinedPorts(IConfiguration config)
 {
     var grpcPort = config.GetValue("GRPC_PORT", 81);
@@ -78,6 +87,7 @@ Serilog.ILogger CreateSerilogLogger(IConfiguration configuration)
     return (port, grpcPort);
 }
 
+// 封装配置：配置文件 + Azure KeyValut
 IConfiguration GetConfiguration()
 {
     var builder = new ConfigurationBuilder()
