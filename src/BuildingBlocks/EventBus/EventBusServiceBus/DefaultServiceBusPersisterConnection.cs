@@ -1,5 +1,8 @@
 ﻿namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusServiceBus;
 
+/// <summary>
+/// 默认服务总线连接实现类
+/// </summary>
 public class DefaultServiceBusPersisterConnection : IServiceBusPersisterConnection
 {
     private readonly string _serviceBusConnectionString;

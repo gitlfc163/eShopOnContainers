@@ -1,5 +1,8 @@
 ﻿namespace Basket.API.Infrastructure.Filters;
 
+/// <summary>
+/// 授权检查操作过滤器,用于拦截需要授权的请求
+/// </summary>
 public class AuthorizeCheckOperationFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)

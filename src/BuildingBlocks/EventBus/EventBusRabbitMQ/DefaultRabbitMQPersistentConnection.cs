@@ -1,5 +1,8 @@
 ﻿namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
 
+/// <summary>
+/// 默认 RabbitMQ 持久化连接类
+/// </summary>
 public class DefaultRabbitMQPersistentConnection
     : IRabbitMQPersistentConnection
 {
@@ -20,6 +23,11 @@ public class DefaultRabbitMQPersistentConnection
 
     public bool IsConnected => _connection is { IsOpen: true } && !Disposed;
 
+    /// <summary>
+    /// 创建并返回一个新的通道、会话和模型
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public IModel CreateModel()
     {
         if (!IsConnected)
@@ -48,7 +56,10 @@ public class DefaultRabbitMQPersistentConnection
             _logger.LogCritical(ex.ToString());
         }
     }
-
+    /// <summary>
+    /// 建立连接
+    /// </summary>
+    /// <returns></returns>
     public bool TryConnect()
     {
         _logger.LogInformation("RabbitMQ Client is trying to connect");
@@ -87,7 +98,11 @@ public class DefaultRabbitMQPersistentConnection
             }
         }
     }
-
+    /// <summary>
+    /// 连接受阻
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     private void OnConnectionBlocked(object sender, ConnectionBlockedEventArgs e)
     {
         if (Disposed) return;
@@ -96,7 +111,11 @@ public class DefaultRabbitMQPersistentConnection
 
         TryConnect();
     }
-
+    /// <summary>
+    /// 当连接调用的回调中发生异常时发出信号
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
     void OnCallbackException(object sender, CallbackExceptionEventArgs e)
     {
         if (Disposed) return;
@@ -106,6 +125,11 @@ public class DefaultRabbitMQPersistentConnection
         TryConnect();
     }
 
+    /// <summary>
+    /// 当连接时关闭时
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="reason"></param>
     void OnConnectionShutdown(object sender, ShutdownEventArgs reason)
     {
         if (Disposed) return;

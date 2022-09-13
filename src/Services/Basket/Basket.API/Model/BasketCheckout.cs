@@ -1,5 +1,8 @@
 namespace Basket.API.Model;
 
+/// <summary>
+/// π∫ŒÔ≥µΩ·À„
+/// </summary>
 public class BasketCheckout
 {
     public string City { get; set; }

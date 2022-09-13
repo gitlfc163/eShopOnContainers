@@ -33,6 +33,7 @@ public class TransactionBehaviour<TRequest, TResponse> : IPipelineBehavior<TRequ
 
             await strategy.ExecuteAsync(async () =>
             {
+                //事务标识符
                 Guid transactionId;
 
                 await using var transaction = await _dbContext.BeginTransactionAsync();

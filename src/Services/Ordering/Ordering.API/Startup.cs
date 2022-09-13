@@ -200,6 +200,7 @@ static class CustomExtensionsMethods
                     ServiceLifetime.Scoped  //Showing explicitly that the DbContext is shared across the HTTP request scope (graph of objects started in the HTTP request)
                 );
 
+        //注册IntegrationEventLogContext即可完成事件日志的集成
         services.AddDbContext<IntegrationEventLogContext>(options =>
         {
             options.UseSqlServer(configuration["ConnectionString"],

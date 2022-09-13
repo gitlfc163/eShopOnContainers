@@ -11,24 +11,32 @@ public class Startup
     // This method gets called by the runtime. Use this method to add services to the container.
     public virtual IServiceProvider ConfigureServices(IServiceCollection services)
     {
+        //Grpc服务
         services.AddGrpc(options =>
         {
+            // 获取或设置一个值，该值指示是否向对等方发送详细的错误消息。
+            // 详细的错误消息包括服务器上抛出的异常的详细信息。
             options.EnableDetailedErrors = true;
         });
 
+        // 注册App监控
         RegisterAppInsights(services);
 
         services.AddControllers(options =>
             {
+                // 全局异常过滤器
                 options.Filters.Add(typeof(HttpGlobalExceptionFilter));
+                // 模型验证过滤器
                 options.Filters.Add(typeof(ValidateModelStateFilter));
 
-            }) // Added for functional tests
+            }) 
+            // 功能集成测试
             .AddApplicationPart(typeof(BasketController).Assembly)
             .AddJsonOptions(options => options.JsonSerializerOptions.WriteIndented = true);
 
+        #region Swagger
         services.AddSwaggerGen(options =>
-        {            
+        {
             options.SwaggerDoc("v1", new OpenApiInfo
             {
                 Title = "eShopOnContainers - Basket HTTP API",
@@ -52,33 +60,39 @@ public class Startup
                     }
                 }
             });
-
+            // 授权检查操作过滤器
             options.OperationFilter<AuthorizeCheckOperationFilter>();
         });
 
+        #endregion
+
+        // 配置认证服务
         ConfigureAuthService(services);
 
+        // 自定义健康检测
         services.AddCustomHealthCheck(Configuration);
 
+        // 获取配置数据
         services.Configure<BasketSettings>(Configuration);
 
-        //By connecting here we are making sure that our service
-        //cannot start until redis is ready. This might slow down startup,
-        //but given that there is a delay on resolving the ip address
-        //and then creating the connection it seems reasonable to move
-        //that cost to startup instead of having the first request pay the
-        //penalty.
+        #region Redis
+        //配置启动Redis服务，虽然可能影响项目启动速度，但是不用在运行的时候报错，所以是合理的.
         services.AddSingleton<ConnectionMultiplexer>(sp =>
         {
             var settings = sp.GetRequiredService<IOptions<BasketSettings>>().Value;
             var configuration = ConfigurationOptions.Parse(settings.ConnectionString, true);
 
+            // 返回redis的连接实例;ConnectionMultiplexer表示到 redis 服务器的一组相互关联的连接。
             return ConnectionMultiplexer.Connect(configuration);
         });
 
+        #endregion
 
+        #region 服务总线，Azure或RabbitMQ
+        // Azure 服务总线是否启用
         if (Configuration.GetValue<bool>("AzureServiceBusEnabled"))
         {
+            // 服务总线连接
             services.AddSingleton<IServiceBusPersisterConnection>(sp =>
             {
                 var serviceBusConnectionString = Configuration["EventBusConnection"];
@@ -119,9 +133,12 @@ public class Startup
             });
         }
 
+        #endregion
+
+        // 注册事件总线 有更新价格、订单生成两部分
         RegisterEventBus(services);
 
-
+        // 跨域
         services.AddCors(options =>
         {
             options.AddPolicy("CorsPolicy",
@@ -131,12 +148,16 @@ public class Startup
                 .AllowAnyHeader()
                 .AllowCredentials());
         });
+
+        // 从Httpcontext中获取指定信息
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        // 仓储数据
         services.AddTransient<IBasketRepository, RedisBasketRepository>();
         services.AddTransient<IIdentityService, IdentityService>();
 
         services.AddOptions();
 
+        // Autofac容器，因为用的是webhost，不是host泛型宿主，所以可以这么写
         var container = new ContainerBuilder();
         container.Populate(services);
 
@@ -169,6 +190,7 @@ public class Startup
 
         app.UseStaticFiles();
 
+        #region 结点路由
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapGrpcService<BasketService>();
@@ -188,6 +210,7 @@ public class Startup
                     }
                 }
             });
+            #region 健康检测
             endpoints.MapHealthChecks("/hc", new HealthCheckOptions()
             {
                 Predicate = _ => true,
@@ -197,17 +220,30 @@ public class Startup
             {
                 Predicate = r => r.Name.Contains("self")
             });
-        });
+            #endregion
+        }); 
+        #endregion
 
+        // 配置事件总线（订单和产品价格）
         ConfigureEventBus(app);
     }
 
+    /// <summary>
+    /// 注册App监控
+    /// </summary>
+    /// <param name="services"></param>
     private void RegisterAppInsights(IServiceCollection services)
     {
         services.AddApplicationInsightsTelemetry(Configuration);
+        //Kubernetes注册App监控
         services.AddApplicationInsightsKubernetesEnricher();
     }
 
+    /// <summary>
+    /// 在启动类进行认证中间件的配置
+    /// 购物车管理界面是需要认证和授权。那自然需要与上游的Identity Microservice进行衔接
+    /// </summary>
+    /// <param name="services"></param>
     private void ConfigureAuthService(IServiceCollection services)
     {
         // prevent from mapping "sub" claim to nameidentifier.
@@ -234,6 +270,11 @@ public class Startup
         app.UseAuthorization();
     }
 
+    /// <summary>
+    /// 注册事件总线
+    /// 有更新价格、订单生成两部分
+    /// </summary>
+    /// <param name="services"></param>
     private void RegisterEventBus(IServiceCollection services)
     {
         if (Configuration.GetValue<bool>("AzureServiceBusEnabled"))
@@ -261,6 +302,7 @@ public class Startup
                 var logger = sp.GetRequiredService<ILogger<EventBusRabbitMQ>>();
                 var eventBusSubscriptionsManager = sp.GetRequiredService<IEventBusSubscriptionsManager>();
 
+                //事件总线重试计数
                 var retryCount = 5;
                 if (!string.IsNullOrEmpty(Configuration["EventBusRetryCount"]))
                 {
@@ -282,10 +324,11 @@ public class Startup
     /// <param name="app"></param>
     private void ConfigureEventBus(IApplicationBuilder app)
     {
-        //事件订阅
+        // 事件订阅
         var eventBus = app.ApplicationServices.GetRequiredService<IEventBus>();
-        
+        // 商品价格修改事件
         eventBus.Subscribe<ProductPriceChangedIntegrationEvent, ProductPriceChangedIntegrationEventHandler>();
+        // 订单启动事件
         eventBus.Subscribe<OrderStartedIntegrationEvent, OrderStartedIntegrationEventHandler>();
     }
 }

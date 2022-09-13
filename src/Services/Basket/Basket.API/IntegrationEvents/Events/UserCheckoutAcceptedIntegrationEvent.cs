@@ -1,5 +1,7 @@
 ﻿namespace Basket.API.IntegrationEvents.Events;
-
+/// <summary>
+/// 用户结账事件
+/// </summary>
 public record UserCheckoutAcceptedIntegrationEvent : IntegrationEvent
 {
     public string UserId { get; }

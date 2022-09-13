@@ -1,5 +1,9 @@
 ﻿namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF;
 
+/// <summary>
+/// EF上下文用于事件日志持久化
+/// 其他微服务通过在启动类中注册IntegrationEventLogContext即可完成事件日志的集成
+/// </summary>
 public class IntegrationEventLogContext : DbContext
 {
     public IntegrationEventLogContext(DbContextOptions<IntegrationEventLogContext> options) : base(options)

@@ -2,6 +2,9 @@
 
 namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
 
+/// <summary>
+/// EventBus集成RabbitMQ
+/// </summary>
 public class EventBusRabbitMQ : IEventBus, IDisposable
 {
     const string BROKER_NAME = "eshop_event_bus";
@@ -11,6 +14,7 @@ public class EventBusRabbitMQ : IEventBus, IDisposable
     private readonly ILogger<EventBusRabbitMQ> _logger;
     private readonly IEventBusSubscriptionsManager _subsManager;
     private readonly ILifetimeScope _autofac;
+    // 事件总线重试计数
     private readonly int _retryCount;
 
     private IModel _consumerChannel;
@@ -229,6 +233,7 @@ public class EventBusRabbitMQ : IEventBus, IDisposable
     }
     /// <summary>
     /// 事件消息的监听
+    /// 创建消费者信道，用于消息消费
     /// </summary>
     /// <returns></returns>
     private IModel CreateConsumerChannel()

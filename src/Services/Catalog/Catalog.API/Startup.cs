@@ -216,7 +216,7 @@ public static class CustomExtensionMethods
                                         sqlOptions.EnableRetryOnFailure(maxRetryCount: 15, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
                                     });
         });
-        //事件日志
+        //注册IntegrationEventLogContext即可完成事件日志的集成
         services.AddDbContext<IntegrationEventLogContext>(options =>
         {
             options.UseSqlServer(configuration["ConnectionString"],

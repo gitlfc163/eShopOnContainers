@@ -1,5 +1,8 @@
 namespace Microsoft.eShopOnContainers.Services.Basket.API.Infrastructure.Repositories;
 
+/// <summary>
+/// 基于Redis持久化的购物车仓储实现类
+/// </summary>
 public class RedisBasketRepository : IBasketRepository
 {
     private readonly ILogger<RedisBasketRepository> _logger;

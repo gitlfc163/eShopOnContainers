@@ -20,7 +20,11 @@ public class OrderingIntegrationEventService : IOrderingIntegrationEventService
         _eventLogService = _integrationEventLogServiceFactory(_orderingContext.Database.GetDbConnection());
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="transactionId">事务标识符</param>
+    /// <returns></returns>
     public async Task PublishEventsThroughEventBusAsync(Guid transactionId)
     {
         var pendingLogEvents = await _eventLogService.RetrieveEventLogsPendingToPublishAsync(transactionId);

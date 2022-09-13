@@ -1,5 +1,9 @@
 ﻿namespace Microsoft.eShopOnContainers.Services.Basket.API.IntegrationEvents.EventHandling;
 
+/// <summary>
+/// 产品价格改变集成事件处理程序
+/// 修改所有购物车
+/// </summary>
 public class ProductPriceChangedIntegrationEventHandler : IIntegrationEventHandler<ProductPriceChangedIntegrationEvent>
 {
     private readonly ILogger<ProductPriceChangedIntegrationEventHandler> _logger;
@@ -21,6 +25,7 @@ public class ProductPriceChangedIntegrationEventHandler : IIntegrationEventHandl
 
             var userIds = _repository.GetUsers();
 
+            // 获取所有用户的购物车
             foreach (var id in userIds)
             {
                 var basket = await _repository.GetBasketAsync(id);
@@ -29,7 +34,15 @@ public class ProductPriceChangedIntegrationEventHandler : IIntegrationEventHandl
             }
         }
     }
-
+    /// <summary>
+    /// 更新购物车中的产品价格
+    /// 在商品价格发生变化时
+    /// </summary>
+    /// <param name="productId"></param>
+    /// <param name="newPrice"></param>
+    /// <param name="oldPrice"></param>
+    /// <param name="basket"></param>
+    /// <returns></returns>
     private async Task UpdatePriceInBasketItems(int productId, decimal newPrice, decimal oldPrice, CustomerBasket basket)
     {
         var itemsToUpdate = basket?.Items?.Where(x => x.ProductId == productId).ToList();

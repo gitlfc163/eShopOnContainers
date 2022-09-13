@@ -1,5 +1,9 @@
 ﻿namespace Basket.API.IntegrationEvents.EventHandling;
 
+/// <summary>
+/// 订单启动集成事件处理程序
+/// 删除购物车的产品
+/// </summary>
 public class OrderStartedIntegrationEventHandler : IIntegrationEventHandler<OrderStartedIntegrationEvent>
 {
     private readonly IBasketRepository _repository;
@@ -12,7 +16,11 @@ public class OrderStartedIntegrationEventHandler : IIntegrationEventHandler<Orde
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-
+    /// <summary>
+    /// 订单启动了，购物车里产品就要删除
+    /// </summary>
+    /// <param name="event"></param>
+    /// <returns></returns>
     public async Task Handle(OrderStartedIntegrationEvent @event)
     {
         using (LogContext.PushProperty("IntegrationEventContext", $"{@event.Id}-{Program.AppName}"))

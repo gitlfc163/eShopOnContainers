@@ -1,5 +1,8 @@
 ﻿namespace Microsoft.eShopOnContainers.BuildingBlocks.IntegrationEventLogEF.Utilities;
 
+/// <summary>
+/// 弹性事务
+/// </summary>
 public class ResilientTransaction
 {
     private readonly DbContext _context;

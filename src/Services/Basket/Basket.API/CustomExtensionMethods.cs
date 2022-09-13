@@ -2,6 +2,12 @@
 
 public static class CustomExtensionMethods
 {
+    /// <summary>
+    /// 自定义健康检测
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
     public static IServiceCollection AddCustomHealthCheck(this IServiceCollection services, IConfiguration configuration)
     {
         var hcBuilder = services.AddHealthChecks();

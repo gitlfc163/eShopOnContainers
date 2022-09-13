@@ -1,5 +1,8 @@
 ﻿namespace Microsoft.eShopOnContainers.BuildingBlocks.EventBusRabbitMQ;
 
+/// <summary>
+/// 连接到对应的Broke
+/// </summary>
 public interface IRabbitMQPersistentConnection
     : IDisposable
 {
@@ -12,7 +15,7 @@ public interface IRabbitMQPersistentConnection
     bool TryConnect();
 
     /// <summary>
-    /// 创建并返回一个新的通道、会话和模型。
+    /// 创建并返回一个新的通道、会话和模型
     /// </summary>
     /// <returns></returns>
     IModel CreateModel();

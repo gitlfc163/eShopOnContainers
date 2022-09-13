@@ -1,5 +1,8 @@
 ﻿namespace Basket.API.Infrastructure.Filters;
 
+/// <summary>
+/// 全局异常过滤器
+/// </summary>
 public partial class HttpGlobalExceptionFilter : IExceptionFilter
 {
     private readonly IWebHostEnvironment env;

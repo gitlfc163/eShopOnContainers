@@ -2,6 +2,7 @@
 
 Log.Logger = CreateSerilogLogger(configuration);
 
+// 创建webhost宿主
 try
 {
     Log.Information("Configuring web host ({ApplicationContext})...", Program.AppName);
@@ -22,6 +23,7 @@ finally
     Log.CloseAndFlush();
 }
 
+// 创建webhost宿主
 IWebHost BuildWebHost(IConfiguration configuration, string[] args) =>
     WebHost.CreateDefaultBuilder(args)
         .CaptureStartupErrors(false)
@@ -40,6 +42,7 @@ IWebHost BuildWebHost(IConfiguration configuration, string[] args) =>
 
         })
         .ConfigureAppConfiguration(x => x.AddConfiguration(configuration))
+        // 自定义中断中间件
         .UseFailing(options =>
         {
             options.ConfigPath = "/Failing";
@@ -50,6 +53,7 @@ IWebHost BuildWebHost(IConfiguration configuration, string[] args) =>
         .UseSerilog()
         .Build();
 
+// 创建Serilog日志服务
 Serilog.ILogger CreateSerilogLogger(IConfiguration configuration)
 {
     var seqServerUrl = configuration["Serilog:SeqServerUrl"];
